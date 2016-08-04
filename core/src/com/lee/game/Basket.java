@@ -2,22 +2,16 @@ package com.lee.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.DistanceFieldFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g3d.particles.ParticleSorter;
 import com.badlogic.gdx.input.GestureDetector;
-import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Scanner;
 
 
 public class Basket extends ApplicationAdapter implements GestureDetector.GestureListener{
@@ -27,63 +21,50 @@ public class Basket extends ApplicationAdapter implements GestureDetector.Gestur
 	public static final float GRAVITY = -20f;
 	public float currentTime;
 	static Integer hightscore = 10;
-	FileInputStream readfile = null;
-	FileOutputStream writefile = null;
 
 	SpriteBatch batch;
 	Ball ball;
 	GestureDetector gestureDetector;
-	BitmapFont font;
+	BitmapFont font,font1;
 	@Override
 	public void create () {
 		ball = new Ball();
 		batch = new SpriteBatch();
-		font = new BitmapFont(Gdx.files.internal("win_table.fnt"));
+		font = new BitmapFont(Gdx.files.internal("point.fnt"));
 		font.getData().setScale(2f);
+		font1 = new BitmapFont(Gdx.files.internal("font.fnt"));
+		//font1.getData().setScale(2f);
 		gestureDetector = new GestureDetector(this);
 		Gdx.input.setInputProcessor(gestureDetector);
 		//hightscore = 10;
-		readHighScore();
+		hightscore = readHighScore();
 	}
-	private void readHighScore()
-	{
-
+	private int readHighScore(){
 		try {
-			//Scanner scanner = new Scanner(new File("hightscore.txt"));
-			readfile = new FileInputStream("hightscore.txt");
-			//String s = readfile.read();
-			/*if(scanner.hasNextInt()) {
-				hightscore = scanner.nextInt();
-			}*/
-			System.out.print("hight score is " + hightscore);
+			File file = new File("hightscore.txt");
+			FileReader fileReader = new FileReader(file);
+			StringBuffer stringBuffer = new StringBuffer();
+			int numCharsRead;
+			char[] charArray = new char[1024];
+			while ((numCharsRead = fileReader.read(charArray)) > 0) {
+				stringBuffer.append(charArray, 0, numCharsRead);
+			}
+			fileReader.close();
+			String s =  stringBuffer.toString();
+			float slf = Float.parseFloat(s);
+			int sl = (int)slf;
+			return sl;
 
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		catch (Exception e){
-			System.out.print("error to read file");
-		}
-		finally {
+		return 0;
 
-		}
-		try {
-			if (readfile != null) readfile.close();
-		}catch (Exception e){
-			System.out.print("error to close file");
-		}
 	}
 	private void writeHighScore()
 	{
-		try {
-			writefile = new FileOutputStream("hightscore.txt");
-			writefile.write(hightscore);
-		}
-		catch (Exception e){
-			System.out.print("error to read file");
-		}
-		try {
-			if (writefile != null) writefile.close();
-		}catch (Exception e){
-			System.out.print("error to close file");
-		}
+		FileHandle highscoreFile = Gdx.files.local("hightscore.txt");
+		highscoreFile.writeString(hightscore.toString(), false); //write, append false
 	}
 	@Override
 	public void render () {
@@ -92,7 +73,7 @@ public class Basket extends ApplicationAdapter implements GestureDetector.Gestur
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.begin();
 		ball.render(batch,Gdx.graphics.getDeltaTime());
-		font.draw(batch,hightscore.toString(),30,Basket.HEIGHT*4/5 + 100);
+		font1.draw(batch,"High score:   " +hightscore.toString(),30,Basket.HEIGHT*4/5 + 150);
 		font.draw(batch,Ball.point.toString(),Basket.WIDTH*1/5,Basket.HEIGHT*4/5);
 		batch.end();
 	}
@@ -106,6 +87,7 @@ public class Basket extends ApplicationAdapter implements GestureDetector.Gestur
 		if(inside){
 			System.out.println("inside");
 			Ball.point++;
+			if(Ball.point > hightscore){hightscore = Ball.point;writeHighScore();}
 			if(!ball.orientation_down) {
 				if(ball.velocity.y - GRAVITY/3 > 50)
 					ball.velocity.y = 50;
