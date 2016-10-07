@@ -2,8 +2,10 @@ package com.lee.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.input.GestureDetector;
@@ -21,50 +23,51 @@ public class Basket extends ApplicationAdapter implements GestureDetector.Gestur
 	public static final float GRAVITY = -20f;
 	public float currentTime;
 	static Integer hightscore = 10;
-
+    static boolean waitingToTouch = false;
 	SpriteBatch batch;
 	Ball ball;
 	GestureDetector gestureDetector;
 	BitmapFont font,font1;
+
+	public static AssetManager manager;
 	@Override
 	public void create () {
+		manager = new AssetManager();
+		manager.load("basketballBackground.png", Texture.class);
+		manager.load("bet.fnt",BitmapFont.class);
+		manager.load("font.fnt",BitmapFont.class);
+		manager.load("font/font.fnt",BitmapFont.class);
+		manager.finishLoading();
+//		font = new BitmapFont(Gdx.files.internal("point.fnt"));
+		font = manager.get("bet.fnt",BitmapFont.class);
+		font.getData().setScale(2f);
+		font1 = manager.get("font.fnt",BitmapFont.class);
+		gestureDetector = new GestureDetector(this);
 		ball = new Ball();
 		batch = new SpriteBatch();
-		font = new BitmapFont(Gdx.files.internal("point.fnt"));
-		font.getData().setScale(2f);
-		font1 = new BitmapFont(Gdx.files.internal("font.fnt"));
-		//font1.getData().setScale(2f);
-		gestureDetector = new GestureDetector(this);
+
 		Gdx.input.setInputProcessor(gestureDetector);
 		//hightscore = 10;
 		hightscore = readHighScore();
 	}
 	private int readHighScore(){
 		try {
-			File file = new File("hightscore.txt");
-			FileReader fileReader = new FileReader(file);
-			StringBuffer stringBuffer = new StringBuffer();
-			int numCharsRead;
-			char[] charArray = new char[1024];
-			while ((numCharsRead = fileReader.read(charArray)) > 0) {
-				stringBuffer.append(charArray, 0, numCharsRead);
-			}
-			fileReader.close();
-			String s =  stringBuffer.toString();
-			float slf = Float.parseFloat(s);
-			int sl = (int)slf;
-			return sl;
+//			File file = new File("hightscore.txt");
+			FileHandle highscoreFile = Gdx.files.internal("hightscore.txt");
+			hightscore = Integer.parseInt(highscoreFile.readString());
 
-		} catch (IOException e) {
-			e.printStackTrace();
+			return hightscore;
 		}
-		return 0;
+		finally {
 
+
+			return 0;
+		}
 	}
 	private void writeHighScore()
 	{
-		FileHandle highscoreFile = Gdx.files.local("hightscore.txt");
-		highscoreFile.writeString(hightscore.toString(), false); //write, append false
+		//FileHandle highscoreFile = Gdx.files.internal("hightscore.txt");
+		//highscoreFile.writeString(hightscore.toString(), false); //write, append false
 	}
 	@Override
 	public void render () {
@@ -85,7 +88,8 @@ public class Basket extends ApplicationAdapter implements GestureDetector.Gestur
 		float z= Gdx.graphics.getHeight() - y;
 		boolean inside = (ball.position.x-ball.width/2-50 < x && ball.position.y-50 < z && ball.position.x +ball.width/2+50> x && ball.position.y+ball.width+50>z ) ? true:false;
 		if(inside){
-			System.out.println("inside");
+			//System.out.println("inside");
+			waitingToTouch = false;
 			Ball.point++;
 			if(Ball.point > hightscore){hightscore = Ball.point;writeHighScore();}
 			if(!ball.orientation_down) {
@@ -104,7 +108,7 @@ public class Basket extends ApplicationAdapter implements GestureDetector.Gestur
 			float deltax = ball.position.x  - x;
 			ball.velocity.x += deltax/20;
 		}
-		System.out.println("velocity y :" + ball.velocity.y);
+		//System.out.println("velocity y :" + ball.velocity.y);
 
 		return false;
 	}

@@ -2,6 +2,7 @@ package com.lee.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
@@ -25,6 +26,8 @@ public class Ball {
     public Circle circle_bound = new Circle();
    // float gravity = -25;
     float air_friction = 0.05f;
+    Texture bg ;
+    BitmapFont font;
     public boolean canPlay = false;
     public Ball (){
         velocity = new Vector2(0f,0f);
@@ -32,12 +35,15 @@ public class Ball {
         Basket.HEIGHT = Gdx.graphics.getHeight();
         position = new Vector2(Basket.WIDTH/2 ,Basket.HEIGHT/2 );
         texture = new Texture("basketball.png");
+        bg = Basket.manager.get("basketballBackground.png",Texture.class);
         height = Basket.WIDTH / 3;
         width = Basket.WIDTH / 3;
         center_point = new Vector2();
+        font = Basket.manager.get("font/font.fnt",BitmapFont.class);
     }
     public void restartGame()
     {
+        Basket.waitingToTouch = false;
         canPlay = false;
         point = 0 ;
         position.y = Basket.HEIGHT/2;
@@ -53,6 +59,9 @@ public class Ball {
         if(velocity.x>0) orientation_right = true;else orientation_right= false;
 
         if(position.y <= 0 && orientation_down) {
+            if(Basket.waitingToTouch)
+                restartGame();
+            else Basket.waitingToTouch = true;
             velocity.y -= Basket.AIR_FRICTION*velocity.y;
             if(velocity.y >0) velocity.y = 0;
             velocity.y *= -1;
@@ -104,6 +113,10 @@ public class Ball {
     public void render(SpriteBatch sb,float dt)
     {
         if( canPlay)update(dt);
+
+        sb.draw(bg,0,0);
+        if(!canPlay)
+            font.draw(sb,"Touch ball to play",100,100);
         sb.draw(texture,position.x-width/2,position.y,width,height);
 
     }
